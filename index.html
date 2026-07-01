@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Giám Sát Tiến Độ Xuống Giống & Sản Lượng Cây Trồng Sơn La 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;600&display=swap');
+
+  :root {
+    --agri-dark:     #0b2116;
+    --agri-mid:      #123524;
+    --agri-green:    #1f5f3f;
+    --leaf:          #3ea665;
+    --mint:          #8be4a8;
+    --pale:          #e2f7ec;
+    --accent-gold:   #f4a261;
+    --accent-red:    #e63946;
+    --accent-amber:  #f9c74f;
+    --bg-card:       #0f2e1f;
+    --bg-panel:      #153d29;
+    --text-main:     #edf7f2;
+    --text-dim:      #9cc6af;
+    --text-muted:    #5c8d73;
+    --border:        #235c3e;
+    --shadow:        0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--agri-dark);
+    color: var(--text-main);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #0b2116 0%, #123524 60%, #1f5f3f 100%);
+    border-bottom: 2px solid var(--leaf);
+    padding: 18px 32px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 48px; height: 48px;
+    background: var(--agri-green);
+    border: 2px solid var(--leaf);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .header-title { line-height: 1.2; }
+  .header-title h1 {
+    font-size: 18px; font-weight: 800;
+    color: var(--mint);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .header-title p { font-size: 12px; color: var(--text-dim); font-weight: 400; }
+  .header-meta { display: flex; gap: 20px; align-items: center; }
+  .header-badge {
+    background: var(--agri-green);
+    border: 1px solid var(--leaf);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 11px; font-weight: 600;
+    color: var(--mint);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .pulse-dot {
+    width: 10px; height: 10px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 0 0 var(--accent-red);
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(230,57,70,0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(230,57,70,0); }
+    100% { box-shadow: 0 0 0 0 rgba(230,57,70,0); }
+  }
+  .live-label { font-size: 11px; color: var(--accent-red); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* ── SCENARIO BAR ────────────────────────── */
+  .scenario-bar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex; align-items: center; gap: 24px;
+    flex-wrap: wrap;
+  }
+  .scenario-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+  .scenario-title { font-size: 13px; font-weight: 700; color: var(--mint); }
+  .sep { width: 1px; height: 20px; background: var(--border); }
+  .scenario-tag {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px;
+    background: rgba(62,166,101,0.15);
+    border: 1px solid var(--leaf);
+    color: var(--leaf);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ── LAYOUT ──────────────────────────────── */
+  .main { padding: 20px 32px 40px; max-width: 1600px; }
+
+  /* ── KPI CARDS ───────────────────────────── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card.green::before  { background: linear-gradient(90deg, var(--agri-green), var(--leaf)); }
+  .kpi-card.gold::before   { background: linear-gradient(90deg, #b5692a, var(--accent-gold)); }
+  .kpi-card.amber::before  { background: linear-gradient(90deg, #b89800, var(--accent-amber)); }
+  .kpi-card.red::before    { background: linear-gradient(90deg, #8b1c24, var(--accent-red)); }
+  .kpi-card:hover { border-color: var(--leaf); }
+
+  .kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .kpi-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 26px; font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .kpi-value.green  { color: var(--leaf); }
+  .kpi-value.gold   { color: var(--accent-gold); }
+  .kpi-value.amber  { color: var(--accent-amber); }
+  .kpi-value.red    { color: var(--accent-red); }
+
+  .kpi-sub { font-size: 11px; color: var(--text-dim); }
+  .kpi-target {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 8px;
+  }
+  .kpi-progress-bg {
+    flex: 1; height: 4px;
+    background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  .kpi-progress-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 1s ease;
+  }
+  .kpi-target-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+
+  /* ── WARNING BANNER ──────────────────────── */
+  .warning-banner {
+    background: rgba(230,57,70,0.1);
+    border: 1px solid rgba(230,57,70,0.4);
+    border-left: 4px solid var(--accent-red);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .warning-content h4 { font-size: 13px; font-weight: 700; color: var(--accent-red); margin-bottom: 4px; }
+  .warning-content p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── CHARTS GRID ─────────────────────────── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title { font-size: 13px; font-weight: 700; color: var(--mint); display: flex; align-items: center; gap: 8px; }
+  .panel-icon { font-size: 15px; }
+  .panel-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .panel-body { padding: 14px 18px; }
+
+  /* ── TABLE ───────────────────────────────── */
+  .table-panel { grid-column: 1 / -1; }
+  .search-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .search-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-main);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px;
+    width: 260px;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--leaf); }
+  .filter-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-dim);
+    font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .filter-btn.active { background: var(--agri-green); border-color: var(--leaf); color: var(--mint); }
+  .filter-btn:hover { border-color: var(--leaf); color: var(--text-main); }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table tbody tr {
+    border-bottom: 1px solid rgba(35,92,62,0.5);
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:hover { background: rgba(31,95,63,0.15); }
+  .data-table td { padding: 9px 14px; color: var(--text-main); }
+  .td-num { font-family: 'Roboto Mono', monospace; font-size: 12px; text-align: right; }
+  .td-name { font-weight: 600; }
+
+  .ty-le-bar {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ty-le-track {
+    flex: 1; height: 6px;
+    background: var(--border);
+    border-radius: 3px; overflow: hidden;
+  }
+  .ty-le-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+  .ty-le-text {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    min-width: 45px; text-align: right;
+  }
+  
+  .badge-status {
+    padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  }
+  .status-high { background: rgba(62,166,101,0.2); color: var(--mint); border: 1px solid var(--leaf); }
+  .status-mid { background: rgba(244,162,97,0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+  .status-low { background: rgba(230,57,70,0.2); color: #ff8a8a; border: 1px solid var(--accent-red); }
+
+  /* ── ADVICE BOX ──────────────────────────── */
+  .advice-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+  .advice-title {
+    font-size: 13px; font-weight: 700; color: var(--mint); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .advice-list { padding-left: 18px; }
+  .advice-list li { font-size: 12.5px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.6; text-align: justify; }
+  .advice-list strong { color: var(--text-main); }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">🌾</div>
+      <div class="header-title">
+        <h1>Hệ Thống Giám Sát Tiến Độ Xuống Giống &amp; Dự Báo Sản Lượng</h1>
+        <p>Phòng Trồng trọt và Bảo vệ thực vật phối hợp cùng Chi cục Trồng trọt — Sở Nông nghiệp và PTNT Sơn La</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="header-badge">Kịch bản: KB-02</span>
+      <div class="pulse-dot"></div>
+      <span class="live-label">Cảnh báo Đỏ Hệ thống</span>
+    </div>
+  </div>
+
+  <div class="scenario-bar">
+    <span class="scenario-label">Tên kịch bản:</span>
+    <span class="scenario-title">KB-02: Giám sát tiến độ xuống giống và dự báo sản lượng cây trồng phục vụ chỉ đạo sản xuất vụ mùa 2026</span>
+    <div class="sep"></div>
+    <span class="scenario-label">Loại kịch bản:</span>
+    <span class="scenario-tag">QUẢN LÝ NHÀ NƯỚC</span>
+  </div>
+
+  <div class="main">
+
+    <div class="warning-banner">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <h4>🚨 HỆ THỐNG TỰ ĐỘNG KÍCH HOẠT CẢNH BÁO ĐỎ ĐIỀU HÀNH THỜI VỤ MÙA</h4>
+        <p>Căn cứ tiêu chí kích hoạt cảnh báo: Hệ thống tự động kích hoạt khi <strong>diện tích xuống giống chậm tiến độ vụ mùa trên 15%</strong>. Chỉ tiêu <strong>Lúa vụ mùa</strong> hiện đang ghi nhận mức trễ nghiêm trọng: <strong>18.50%</strong> so với lịch thời vụ quy định. Yêu cầu Lãnh đạo kịp thời ban hành văn bản chỉ đạo điều chỉnh khung lịch thời vụ và cơ cấu giống cây trồng!</p>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card red">
+        <div class="kpi-label">Tiến Độ Trễ Lúa Vụ Mùa</div>
+        <div class="kpi-value red">18.50%</div>
+        <div class="kpi-sub">Lũy kế gieo trồng: 4.300 / 21.600 Ha</div>
+        <div class="kpi-target">
+          <div class="kpi-progress-bg"><div class="kpi-progress-fill" style="width: 100%; background: var(--accent-red);"></div></div>
+          <span class="kpi-target-label">Ngưỡng kích hoạt >15%</span>
+        </div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Tổng Diện Tích Lương Thực Cả Năm</div>
+        <div class="kpi-value green">114.284 Ha</div>
+        <div class="kpi-sub">Kế hoạch: 114.000 Ha</div>
+        <div class="kpi-target">
+          <div class="kpi-progress-bg"><div class="kpi-progress-fill" style="width: 100%; background: var(--leaf);"></div></div>
+          <span class="kpi-target-label">Đạt 100.25% KH</span>
+        </div>
+      </div>
+      <div class="kpi-card mint">
+        <div class="kpi-label">Dự Báo Sản Lượng Lương Thực</div>
+        <div class="kpi-value mint">521.356 Tấn</div>
+        <div class="kpi-sub">Kế hoạch: 520.202 Tấn</div>
+        <div class="kpi-target">
+          <div class="kpi-progress-bg"><div class="kpi-progress-fill" style="width: 100%; background: var(--mint);"></div></div>
+          <span class="kpi-target-label">Ước đạt 100.22%</span>
+        </div>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-label">Tiến độ xuống giống Ngô vụ mùa</div>
+        <div class="kpi-value gold">94.18%</div>
+        <div class="kpi-sub">Lũy kế gieo trồng: 41.064 / 43.600 Ha</div>
+        <div class="kpi-target">
+          <div class="kpi-progress-bg"><div class="kpi-progress-fill" style="width: 94.18%; background: var(--accent-gold);"></div></div>
+          <span class="kpi-target-label">Trễ lịch: 2.1% (An toàn)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="panel-icon">📊</span> Tiến độ gieo trồng lũy kế thực tế so với Kế hoạch vụ vụ mùa 2026</div>
+          <div class="panel-subtitle">Đơn vị tính: Hecta (Ha)</div>
+        </div>
+        <div class="panel-body">
+          <canvas id="prodChart" style="max-height: 280px;"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="panel-icon">🌱</span> Cơ cấu phân bổ Diện tích gieo trồng thực tế (6T-2026)</div>
+        </div>
+        <div class="panel-body">
+          <canvas id="areaChart" style="max-height: 280px;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel table-panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="panel-icon">📋</span> Bảng tổng hợp số liệu gieo trồng và phân tích biến động thời vụ (Kịch bản thực tế dữ liệu)</div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm tên cây trồng..." oninput="applyFilters()">
+        <button class="filter-btn active" id="btn-all" onclick="filterTable('all', this)">Tất cả cây trồng</button>
+        <button class="filter-btn" onclick="filterTable('low', this)">⚠️ Bị trễ tiến độ lịch chuẩn</button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th>TT</th>
+              <th>Loại Cây Trồng Chủ Yếu</th>
+              <th class="td-num">Kế Hoạch Gieo Trồng (Ha)</th>
+              <th class="td-num">Lũy Kế Thực Hiện Đến Kỳ (Ha)</th>
+              <th class="td-num">Tiến Độ Đạt Được (%)</th>
+              <th class="td-num">Tình Trạng Trễ So Lịch Chuẩn (%)</th>
+              <th>Trạng Thái Hệ Thống Phát Ra</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="advice-box">
+      <div class="advice-title">💡 🤖 PHƯƠNG ÁN ĐIỀU HÀNH ĐỀ XUẤT TỪ AI (DỰA TRÊN PHÂN TÍCH DỮ LIỆU ĐIỀU HÀNH CHỈ ĐẠO)</div>
+      <ul class="advice-list">
+        <li><strong>Hành động 1 (Hỏa tốc):</strong> Ban hành ngay văn bản chỉ đạo hỏa tốc gửi UBND các huyện cho phép điều chỉnh, kéo dài khung lịch thời vụ vụ mùa thêm từ 10 - 15 ngày nhằm tận dụng tối đa lượng mưa đầu vụ, tránh bỏ sót diện tích đất chưa kịp gieo cấy.</li>
+        <li><strong>Hành động 2 (Cơ cấu giống):</strong> Khẩn trương hướng dẫn người dân thay đổi cơ cấu giống cây trồng linh hoạt, ưu tiên chuyển đổi sang sử dụng các bộ giống lúa thuần cực ngắn ngày và ngắn ngày (thời gian sinh trưởng từ 90 - 100 ngày) nhằm bảo đảm kịp thời thu hoạch trước khi mùa mưa bão và lũ quét bắt đầu vào tháng 9.</li>
+        <li><strong>Hành động 3 (Chuyển đổi diện tích):</strong> Chủ động phương án chuyển đổi diện tích canh tác kém hiệu quả. Đối với các vùng cao, lưu vực thiếu nước đầu nguồn nghiêm trọng không còn khả năng gieo cấy lúa, chuyển ngay sang trồng các loại cây rau màu ngắn ngày, ngô vụ hè thu muộn hoặc cây thức ăn gia súc để đảm bảo giữ vững tổng sản lượng và giá trị tăng trưởng của ngành nông nghiệp.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script>
+    const DATA = [
+      {tt: "1", name: "Lúa vụ mùa", plan: 21600, actual: 4300, rate: 19.91, delay: 18.50, status: "🔴 CẢNH BÁO ĐỎ"},
+      {tt: "2", name: "Ngô vụ mùa", plan: 43600, actual: 41064, rate: 94.18, delay: 2.10, status: "🟢 Bình thường"},
+      {tt: "3", name: "Sắn", plan: 42500, actual: 39120, rate: 92.05, delay: 6.20, status: "🟡 Cảnh báo vàng"}
+    ];
+
+    let currentFilter = 'all';
+
+    function renderTable(dataToRender) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = dataToRender.map(d => {
+        let statusBadge = '';
+        if(d.delay > 15) {
+          statusBadge = `<span class="badge-status status-low">${d.status}</span>`;
+        } else if(d.delay > 5) {
+          statusBadge = `<span class="badge-status status-mid">${d.status}</span>`;
+        } else {
+          statusBadge = `<span class="badge-status status-high">${d.status}</span>`;
+        }
+
+        return `
+          <tr>
+            <td>${d.tt}</td>
+            <td class="td-name">${d.name}</td>
+            <td class="td-num">${d.plan.toLocaleString('vi-VN')}</td>
+            <td class="td-num">${d.actual.toLocaleString('vi-VN')}</td>
+            <td class="td-num">${d.rate.toFixed(2)}%</td>
+            <td class="td-num" style="color: ${d.delay > 15 ? 'var(--accent-red)' : 'var(--text-main)'}; font-weight: ${d.delay > 15 ? 'bold' : 'normal'};">${d.delay.toFixed(2)}%</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterTable(type, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = type;
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      let filtered = DATA.filter(d => d.name.toLowerCase().includes(q));
+      if (currentFilter === 'low') filtered = filtered.filter(d => d.delay > 15);
+      renderTable(filtered);
+    }
+
+    // Initialize table
+    renderTable(DATA);
+
+    // Initialize Charts
+    const ctxProd = document.getElementById('prodChart').getContext('2d');
+    new Chart(ctxProd, {
+      type: 'bar',
+      data: {
+        labels: ['Lúa vụ mùa', 'Ngô vụ mùa', 'Sắn'],
+        datasets: [
+          { label: 'Kế hoạch gieo trồng (Ha)', data: [21600, 43600, 42500], backgroundColor: '#1f5f3f' },
+          { label: 'Lũy kế thực hiện (Ha)', data: [4300, 41064, 39120], backgroundColor: '#3ea665' }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#edf7f2', font: { family: 'Be Vietnam Pro' } } }
+        },
+        scales: {
+          x: { grid: { color: '#235c3e' }, ticks: { color: '#9cc6af' } },
+          y: { grid: { color: '#235c3e' }, ticks: { color: '#9cc6af' } }
+        }
+      }
+    });
+
+    const ctxArea = document.getElementById('areaChart').getContext('2d');
+    new Chart(ctxArea, {
+      type: 'doughnut',
+      data: {
+        labels: ['Lúa vụ mùa thực hiện', 'Ngô vụ mùa thực hiện', 'Sắn thực hiện'],
+        datasets: [{
+          data: [4300, 41064, 39120],
+          backgroundColor: ['#e63946', '#3ea665', '#f4a261']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'right', labels: { color: '#edf7f2', font: { family: 'Be Vietnam Pro' } } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
